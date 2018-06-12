@@ -1,6 +1,7 @@
 package request
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -10,12 +11,13 @@ import (
 
 const (
 	roundsEndpoint = "https://api.cartolafc.globo.com/rodadas"
-	roundEnpoint   = "https://api.cartolafc.globo.com/partidas/%s"
+	roundEnpoint   = "https://api.cartolafc.globo.com/partidas/%d"
 	timeFormat     = "2006-01-02 15:04:05"
 )
 
-// CurrentRound executes a request to the currently active round.
-func CurrentRound() {
+// MatchesPerformed executes requests to every match played until now.
+func MatchesPerformed() {
+	// request rounds list
 	resp, err := http.Get(roundsEndpoint)
 	if err != nil {
 		panic(err)
@@ -23,25 +25,31 @@ func CurrentRound() {
 
 	defer resp.Body.Close()
 
+	// read response
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		panic(err)
 	}
 
+	// parse to JSON
 	json, err := core.DecodeJSONArray(body)
 	if err != nil {
 		panic(err)
 	}
 
-	// count := GetFinishedRounds(json)
+	// get number of finished rounds
+	count := getFinishedRounds(json)
+
+	// request each finished round
+	requestMatchesPerformed(count)
 }
 
-// GetFinishedRounds returns the number of rounds that
+// getFinishedRounds returns the number of rounds that
 // were played until now.
-func GetFinishedRounds(j []core.JSON) int32 {
+func getFinishedRounds(j []core.JSON) int {
 	var roundTimeString *string
 	var roundTime time.Time
-	var count int32
+	var count int
 
 	for _, r := range j {
 		roundTimeString = core.StringFromJSON(r, "fim")
@@ -55,4 +63,22 @@ func GetFinishedRounds(j []core.JSON) int32 {
 	}
 
 	return count
+}
+
+func requestMatchesPerformed(count int) {
+	ch := make(chan *http.Response)
+
+	for i := 1; i <= count; i++ {
+		go func(count int) {
+			url := fmt.Sprintf(roundEnpoint, count)
+			resp, err := http.Get(url)
+			ch <- resp
+
+			defer resp.Body.Close()
+
+			if err != nil {
+				panic(err)
+			}
+		}(count)
+	}
 }

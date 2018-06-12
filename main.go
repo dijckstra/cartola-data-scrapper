@@ -6,6 +6,6 @@ import (
 )
 
 func main() {
-	gocron.Every(5).Seconds().Do(request.CurrentRound)
+	gocron.Every(5).Seconds().Do(request.MathesPerformed)
 	<-gocron.Start()
 }
