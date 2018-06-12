@@ -1,11 +1,13 @@
 package main
 
 import (
-	"github.com/dijckstra/cartola-data-scrapper/request"
+	"github.com/dijckstra/cartola-data-scrapper/rounds"
 	"github.com/jasonlvhit/gocron"
 )
 
 func main() {
-	gocron.Every(5).Seconds().Do(request.MathesPerformed)
+	roundRequestor := rounds.NewRoundRequestor()
+
+	gocron.Every(5).Seconds().Do(roundRequestor.RequestMatchesPerformed)
 	<-gocron.Start()
 }
