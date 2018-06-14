@@ -1,10 +1,14 @@
 package rounds
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	"github.com/dijckstra/cartola-data-scrapper/data/database"
+	"github.com/dijckstra/cartola-data-scrapper/data/model"
 
 	"github.com/dijckstra/cartola-data-scrapper/core"
 )
@@ -18,15 +22,7 @@ const (
 // RoundRequestor represents the object that executes requests to the
 // rounds and matches endpoints.
 type RoundRequestor struct {
-	adapter RoundAdapter
-}
-
-// NewRoundRequestor returns an instance of a RoundRequestor.
-func NewRoundRequestor() RoundRequestor {
-	roundRequestor := RoundRequestor{}
-	roundRequestor.adapter = RoundAdapter{}
-
-	return roundRequestor
+	Db *database.DB
 }
 
 // RequestMatchesPerformed executes requests to every match played until now.
@@ -46,36 +42,36 @@ func (requestor *RoundRequestor) RequestMatchesPerformed() {
 	}
 
 	// parse to JSON
-	json, err := core.DecodeJSONArray(body)
+	var res []model.Round
+	err = json.Unmarshal(body, &res)
 	if err != nil {
 		panic(err)
 	}
 
 	// get finished rounds
-	rounds := getFinishedRounds(json)
+	getFinishedRounds(&res)
+	err = requestor.Db.InsertRounds(res)
+	if err != nil {
+		panic(err)
+	}
 
 	// request each finished round
-	requestor.requestMatchesPerformed(len(rounds))
+	requestor.requestMatchesPerformed(len(res))
 }
 
 // getFinishedRounds returns the slice of rounds that were played until now.
-func getFinishedRounds(j []core.JSON) []core.JSON {
-	var roundTimeString *string
-	var roundTime time.Time
+func getFinishedRounds(rounds *[]model.Round) {
 	var count int
 
-	for _, r := range j {
-		roundTimeString = core.StringFromJSON(r, "fim")
-		roundTime, _ = time.Parse(timeFormat, *roundTimeString)
-
-		if time.Until(roundTime) > 0 {
+	for _, r := range *rounds {
+		if time.Until(r.EndTime.Time) > 0 {
 			break
 		}
 
 		count++
 	}
 
-	return j[:count]
+	*rounds = (*rounds)[:count]
 }
 
 func (requestor *RoundRequestor) requestMatchesPerformed(count int) {
@@ -109,12 +105,10 @@ func (requestor *RoundRequestor) responseHandler(ch <-chan *http.Response, count
 			panic(err)
 		}
 
-		json, err := core.DecodeJSON(body)
+		_, err2 := core.DecodeJSON(body)
 		if err != nil {
-			panic(err)
+			panic(err2)
 		}
-
-		requestor.adapter.GetRound(json)
 
 		responses++
 		if responses == count {
