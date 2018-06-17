@@ -3,14 +3,8 @@ package database
 import (
 	"context"
 
-	"github.com/dijckstra/cartola-data-scrapper/data/model"
 	"github.com/mongodb/mongo-go-driver/mongo"
 )
-
-// Database is the interface to the operations done to MongoDB.
-type Database interface {
-	InsertRounds(rounds []*model.Round) error
-}
 
 // DB is our MongoDB wrapper.
 type DB struct {

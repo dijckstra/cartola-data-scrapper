@@ -3,9 +3,11 @@ package main
 import (
 	"log"
 
+	"github.com/jasonlvhit/gocron"
+
 	"github.com/dijckstra/cartola-data-scrapper/config"
-	"github.com/dijckstra/cartola-data-scrapper/data"
-	"github.com/dijckstra/cartola-data-scrapper/rounds"
+	"github.com/dijckstra/cartola-data-scrapper/data/database"
+	"github.com/dijckstra/cartola-data-scrapper/request"
 )
 
 var configuration = config.Configuration{}
@@ -17,11 +19,13 @@ func init() {
 
 func main() {
 	// Establish a connection to DB
-	db, err := data.NewDB(configuration.Server, configuration.Database)
+	db, err := database.NewDB(configuration.Server, configuration.Database)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	roundRequestor := &rounds.RoundRequestor{Db: db}
-	roundRequestor.RequestMatchesPerformed()
+	// request player information every Monday
+	playerRequestor := &request.PlayerRequestor{Db: db}
+	gocron.Every(1).Monday().Do(playerRequestor.RequestPlayers)
+	<-gocron.Start()
 }
