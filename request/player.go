@@ -10,7 +10,6 @@ import (
 
 const (
 	playersEndpoint = "https://api.cartolafc.globo.com/atletas/mercado"
-	selfEndpoint    = "http://localhost:3000/players"
 	contentType     = "application/json"
 )
 
@@ -21,7 +20,19 @@ type PlayerRequestor struct{}
 // RequestPlayers retrieves all players in the tournament.
 func (requestor *PlayerRequestor) RequestPlayers() {
 	// request rounds list
-	resp, err := http.Get(playersEndpoint)
+	resp, err := http.Get("http://naming-service:4000/lookup?name=cartola-rest-api")
+	if err != nil {
+		panic(err)
+	}
+	// read response
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	selfEndpoint    := string(body)
+	
+	resp, err = http.Get(playersEndpoint)
 	if err != nil {
 		panic(err)
 	}
@@ -29,7 +40,7 @@ func (requestor *PlayerRequestor) RequestPlayers() {
 	defer resp.Body.Close()
 
 	// read response
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		panic(err)
 	}
