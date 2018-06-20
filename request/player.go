@@ -30,7 +30,7 @@ func (requestor *PlayerRequestor) RequestPlayers() {
 		panic(err)
 	}
 
-	selfEndpoint    := string(body)
+	selfEndpoint := string(body) + "/players"
 	
 	resp, err = http.Get(playersEndpoint)
 	if err != nil {

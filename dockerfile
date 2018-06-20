@@ -1,4 +1,4 @@
-FROM golang:1.7
+FROM golang:1.10.2
 ENV GOPATH /go
 COPY . /go/src/github.com/dijckstra/cartola-data-scrapper
 
