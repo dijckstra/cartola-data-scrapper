@@ -1,24 +1,22 @@
 package request
 
 import (
-	"log"
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/http"
-
-	"github.com/dijckstra/cartola-data-scrapper/data/database"
-	"github.com/dijckstra/cartola-data-scrapper/data/model"
 )
 
 const (
 	playersEndpoint = "https://api.cartolafc.globo.com/atletas/mercado"
+	selfEndpoint    = "http://localhost:3000/players"
+	contentType     = "application/json"
 )
 
 // PlayerRequestor is the object that
 // retrieves player information from the API.
-type PlayerRequestor struct {
-	Db *database.DB
-}
+type PlayerRequestor struct{}
 
 // RequestPlayers retrieves all players in the tournament.
 func (requestor *PlayerRequestor) RequestPlayers() {
@@ -39,15 +37,17 @@ func (requestor *PlayerRequestor) RequestPlayers() {
 	// parse to JSON
 	var objmap map[string]*json.RawMessage
 	err = json.Unmarshal(body, &objmap)
-
-	var res []model.Player
-	err = json.Unmarshal(*objmap["atletas"], &res)
 	if err != nil {
 		panic(err)
 	}
 
-	// insert into database
-	err = requestor.Db.InsertPlayers(&res)
+	data, err := json.Marshal(*objmap["atletas"])
+	if err != nil {
+		panic(err)
+	}
+
+	// send to our endpoint
+	resp, err = http.Post(selfEndpoint, contentType, bytes.NewBuffer(data))
 	if err != nil {
 		panic(err)
 	}
