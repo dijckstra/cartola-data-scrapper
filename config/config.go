@@ -14,7 +14,7 @@ type Configuration struct {
 
 // Read will parse the configuration file.
 func (c *Configuration) Read() {
-	if _, err := toml.DecodeFile("config.toml", &c); err != nil {
+	if _, err := toml.DecodeFile("/go/src/github.com/dijckstra/cartola-data-scrapper/config.toml", &c); err != nil {
 		log.Fatal(err)
 	}
 }

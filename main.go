@@ -23,9 +23,11 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
-
+	log.Printf("startou")
 	// request player information every Monday
 	playerRequestor := &request.PlayerRequestor{Db: db}
+
+	playerRequestor.RequestPlayers()
 	gocron.Every(1).Monday().Do(playerRequestor.RequestPlayers)
 	<-gocron.Start()
 }

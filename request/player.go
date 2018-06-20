@@ -1,6 +1,7 @@
 package request
 
 import (
+	"log"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -50,4 +51,5 @@ func (requestor *PlayerRequestor) RequestPlayers() {
 	if err != nil {
 		panic(err)
 	}
+	log.Printf("sucesso")
 }
