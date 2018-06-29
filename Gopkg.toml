@@ -1,0 +1,7 @@
+[[constraint]]
+  branch = "master"
+  name = "github.com/jasonlvhit/gocron"
+
+[prune]
+  go-tests = true
+  unused-packages = true
